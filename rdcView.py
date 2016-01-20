@@ -4,6 +4,8 @@ import sys
 import os
 from PyQt4 import QtCore, QtGui, uic
 from control import rdcCtl
+import rdpInstance
+from types import MethodType
 #import win32api
 #import ctypes
 
@@ -62,10 +64,141 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
 
         self.initTmpFolder()
 
+        self.rdpInstance = rdpInstance.RDPInstance()
+
+        self.addListener()
         # print self.colorComboBox.itemText(0).extracomment
         #self.setGeometry(300, 300, 250, 150)
         # self.connect(self.accountEdit, SIGNAL("returnPressed(void)"),
         #              self.runCommand
+
+
+    def addListener(self):
+        def connBarCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.enable_displayconnectionbar()
+            else:
+                self.rdpInstance.disable_displayconnectionbar()
+        self.connBarCheckBox.stateChanged.connect(connBarCheckBox_stateChanged)
+
+        def printCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.enable_redirectprinters()
+            else:
+                self.rdpInstance.disable_redirectprinters()
+        self.printCheckBox.stateChanged.connect(printCheckBox_stateChanged)
+
+        def cliCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.enable_redirectclipboard()
+            else:
+                self.rdpInstance.disable_redirectclipboard()
+        self.cliCheckBox.stateChanged.connect(cliCheckBox_stateChanged)
+
+        def reconnCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.enable_autoreconnection()
+            else:
+                self.rdpInstance.disable_autoreconnection()
+        self.reconnCheckBox.stateChanged.connect(reconnCheckBox_stateChanged)
+
+        def authComboBox_stateChanged(index):
+            self.rdpInstance.set_authentication_level(index)
+        self.authComboBox.currentIndexChanged.connect(authComboBox_stateChanged)
+
+        def cmpLineEdit_2_stateChanged(data):
+            self.rdpInstance.set_full_address(data)
+        self.cmpLineEdit_2.textChanged.connect(cmpLineEdit_2_stateChanged)
+
+        def audioCaptureComBox_stateChanged(index):
+            self.rdpInstance.set_audiocapturemode(index)
+        self.audioCaptureComBox.currentIndexChanged.connect(audioCaptureComBox_stateChanged)
+
+        def audioPlayComBox_stateChanged(index):
+            self.rdpInstance.set_audiomode(index)
+        self.audioPlayComBox.currentIndexChanged.connect(audioPlayComBox_stateChanged)
+
+        def keyComBox_stateChanged(index):
+            self.rdpInstance.set_keyboardhook(index)
+        self.keyComBox.currentIndexChanged.connect(keyComBox_stateChanged)
+
+        def smartCardCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.enable_redirectsmartcards()
+            else:
+                self.rdpInstance.disable_redirectsmartcards()
+        self.smartCardCheckBox.stateChanged.connect(smartCardCheckBox_stateChanged)
+
+        def portCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.enable_redirectcomports()
+            else:
+                self.rdpInstance.disable_redirectcomports()
+        self.portCheckBox.stateChanged.connect(portCheckBox_stateChanged)
+
+        def colorComboBox_stateChanged(index):
+            self.rdpInstance.set_session_bpp(self.getColorComVal(index))
+        self.colorComboBox.currentIndexChanged.connect(colorComboBox_stateChanged)
+
+        def connTypeComboBox_stateChanged(index):
+            self.rdpInstance.set_connection_type(index+1)
+        self.connTypeComboBox.currentIndexChanged.connect(connTypeComboBox_stateChanged)
+
+        def backCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.disable_wallpaper()
+            else:
+                self.rdpInstance.enable_wallpaper()
+        self.backCheckBox.stateChanged.connect(backCheckBox_stateChanged)
+
+        def fontCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.enable_font_smoothing()
+            else:
+                self.rdpInstance.disable_font_smoothing()
+        self.fontCheckBox.stateChanged.connect(fontCheckBox_stateChanged)
+
+        def backCssCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.enable_desktop_composition()
+            else:
+                self.rdpInstance.disable_desktop_composition()
+        self.backCssCheckBox.stateChanged.connect(backCssCheckBox_stateChanged)
+
+        def dragCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.disable_full_window_drag()
+            else:
+                self.rdpInstance.enable_full_window_drag()
+        self.dragCheckBox.stateChanged.connect(dragCheckBox_stateChanged)
+
+        def menuCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.disable_menu_anims()
+            else:
+                self.rdpInstance.enable_menu_anims()
+        self.menuCheckBox.stateChanged.connect(menuCheckBox_stateChanged)
+
+        def viewCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.disable_themes()
+            else:
+                self.rdpInstance.enable_themes()
+        self.viewCheckBox.stateChanged.connect(viewCheckBox_stateChanged)
+
+        def bitMapCheckBox_stateChanged(state):
+            if state == QtCore.Qt.Checked:
+                self.rdpInstance.enable_bitmapcachepersistenable()
+            else:
+                self.rdpInstance.disable_bitmapcachepersistenable()
+        self.bitMapCheckBox.stateChanged.connect(bitMapCheckBox_stateChanged)
+
+        def horizontalSlider_stateChanged(index):
+            self.rdpInstance.set_desktopwidth(self.metricsMap[index][0])
+            self.rdpInstance.set_desktopheight(self.metricsMap[index][1])
+        self.horizontalSlider.valueChanged.connect(horizontalSlider_stateChanged)
+
+
     def initTmpFolder(self):
         if(os.path.isdir(self.tmpFileFolder)):
             pass
@@ -73,6 +206,16 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
             os.mkdir(self.tmpFileFolder)
 
     def initEquipConent(self):
+        def itemDrive_setCheckState(this, col, state):
+            this._setCheckState(col, state)
+            name = unicode(this.text(0))
+            results = re.match("^.*\((.+:)\)$", name)
+            letter = results.group(1)
+            if(state == QtCore.Qt.Checked):
+                self.rdpInstance.enable_drivestoredirect(letter, name)
+            else:
+                self.rdpInstance.disable_drivestoredirect(letter)
+
         self.drives = QtGui.QTreeWidgetItem(self.equipTreeWidget)
         self.drives.setText(0, u'驱动器')
         self.drives.setFlags(self.drives.flags() |
@@ -89,12 +232,15 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
             else:
                 volName = properties[2].decode('GBK')
             itemStr = volName + ' (' + properties[0] + ')'
-            itemDive = QtGui.QTreeWidgetItem(self.drives)
-            itemDive.setText(0, itemStr)
-            itemDive.setFlags(itemDive.flags() |
+            itemDrive = QtGui.QTreeWidgetItem(self.drives)
+            itemDrive.setText(0, itemStr)
+            itemDrive.setFlags(itemDrive.flags() |
                               QtCore.Qt.ItemIsUserCheckable)
-            itemDive.setCheckState(0, QtCore.Qt.Unchecked)
-            self.drives.addChild(itemDive)
+            itemDrive.setCheckState(0, QtCore.Qt.Unchecked)
+            itemDrive._setCheckState = itemDrive.setCheckState
+            itemDrive.setCheckState = MethodType(itemDrive_setCheckState, itemDrive, QtGui.QTreeWidgetItem)
+            itemDrive.isDrive = True
+            self.drives.addChild(itemDrive)
 
         dynamicDrive = QtGui.QTreeWidgetItem(self.drives)
         dynamicDrive.setText(0, u'稍后插入的驱动器')
@@ -115,18 +261,6 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
                                QtCore.Qt.ItemIsUserCheckable)
         dynamicDevice.setCheckState(0, QtCore.Qt.Unchecked)
         self.equipTreeWidget.itemClicked.connect(self.equipClicked)
-        # self.devices.itemChanged.connect(self.equipClicked)
-
-        '''
-        model=QtGui.QStandardItemModel(self.equipTreeView)
-        item=QtGui.QStandardItem()
-        model->appendRow(itemProject);  
-        model->setItem(model->indexFromItem(itemProject).row(),1,new QStandardItem(QStringLiteral("项目信息说明")));  
-        QStandardItem* itemFolder = new QStandardItem(m_publicIconMap[QStringLiteral("treeItem_folder")],QStringLiteral("文件夹1"));  
-        itemProject->appendRow(itemFolder);  
-        itemProject->setChild(itemFolder->index().row(),1,new QStandardItem(QStringLiteral("信息说明")));  
-        itemFolder = new QStandardItem(m_publicIconMap[QStringLiteral("treeItem_folder")],QStringLiteral("文件夹2"));  
-        itemProject->appendRow(itemFolder);  '''
 
     def initDeskSize(self):
         self.initMetics()
@@ -150,6 +284,14 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
             item.setCheckState(0, QtCore.Qt.PartiallyChecked)
 
     def equipClicked(self, item):
+        if hasattr(item, "isDrive"):
+            name = unicode(item.text(0))
+            results = re.match("^.*\((.+:)\)$", name)
+            letter = results.group(1)
+            if(item.checkState(0) == QtCore.Qt.Checked):
+                self.rdpInstance.enable_drivestoredirect(letter, name)
+            else:
+                self.rdpInstance.disable_drivestoredirect(letter)
         if(isinstance(item.parent(), QtGui.QTreeWidgetItem)):
             self.equipParentChangeWithChild(item.parent())
         self.setQTreeWidgetItems(item, item.checkState(0))
@@ -245,27 +387,18 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
             self.updateView()
 
     def saveFile(self):
-        if(self.fromDefault):
-            self.saveTmpFileFromDefault()
-            if(len(self.tmpFilePath) == 0):
-                self.tmpFilePath = self.tmpFileFolder + '\\rdp_' + \
-                    self.cmpLineEdit_2.text() + '.rdp'
-            if(len(self.rdpFilePath) == 0):
-                self.rdpFilePath = self.tmpFilePath
-        else:
-            self.saveTmpFileFromRDP()
-        self.rdcCtl.writeFile(self.rdpFilePath)
+        if(len(self.tmpFilePath) == 0):
+            self.tmpFilePath = self.tmpFileFolder + '\\rdp_' + \
+                self.cmpLineEdit_2.text() + '.rdp'
+        if(len(self.rdpFilePath) == 0):
+            self.rdpFilePath = self.tmpFilePath
+        self.rdpInstance.write(self.rdpFilePath)
 
     def saveAsFile(self):
         saveasFilePath = QtGui.QFileDialog(self).getSaveFileName()
         if(len(saveasFilePath) != 0):
-            if(self.fromDefault):
-                self.rdpFilePath = saveasFilePath
-                self.saveTmpFileFromDefault()
-            else:
-                self.saveTmpFileFromRDP()
-                self.rdpFilePath = saveasFilePath
-            self.rdcCtl.writeFile(self.rdpFilePath)
+            self.rdpFilePath = saveasFilePath
+        self.saveFile()
 
     def updataRdpFile(self):
         if(len(self.tmpFilePath) == 0):
@@ -277,161 +410,6 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
             self.saveTmpFileFromRDP()
         self.rdcCtl.writeFile(self.tmpFilePath)
 
-    def saveTmpFileFromDefault(self):
-        self.rdcCtl.initDefaultContent(self.defaultRdpPath)
-        content = []
-        content.append('displayconnectionbar:i:1' if self.connBarCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'displayconnectionbar:i:0')
-        content.append('redirectprinters:i:1' if self.printCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'redirectprinters:i:0')
-        content.append('redirectclipboard:i:1' if self.cliCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'redirectclipboard:i:0')
-        content.append('autoreconnection enabled:i:1' if self.reconnCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'autoreconnection enabled:i:0')
-        content.append('authentication level:i:' +
-                       str(self.authComboBox.currentIndex()))
-        content.append('full address:s:' + str(self.cmpLineEdit_2.text()))
-        content.append('audiocapturemode:i:' +
-                       str(self.audioCaptureComBox.currentIndex()))
-        content.append('audiomode:i:' +
-                       str(self.audioPlayComBox.currentIndex()))
-        content.append('keyboardhook:i:' + str(self.keyComBox.currentIndex()))
-        content.append('redirectsmartcards:i:1' if self.smartCardCheckBox.checkState()
-                       == QtCore.Qt.Checked else 'redirectsmartcards:i:0')
-        content.append('redirectcomports:i:1' if self.portCheckBox.checkState()
-                       == QtCore.Qt.Checked else 'redirectcomports:i:0')
-        if(self.drives.checkState(0) == QtCore.Qt.Checked):
-            content.append('drivestoredirect:s:*')
-        if(self.devices.checkState(0) == QtCore.Qt.Checked):
-            content.append('devicestoredirect:s:*')
-
-        content.append('session bpp:i:' +
-                       str(self.getColorComVal(self.colorComboBox.currentIndex())))
-        content.append('connection type:i:' +
-                       str(self.connTypeComboBox.currentIndex() + 1))
-        content.append('disable wallpaper:i:0' if self.backCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'disable wallpaper:i:1')
-        content.append('allow font smoothing:i:1' if self.fontCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'allow font smoothing:i:0')
-        content.append('allow desktop composition:i:1' if self.backCssCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'allow desktop composition:i:0')
-        content.append('disable full window drag:i:0' if self.dragCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'disable full window drag:i:1')
-        content.append('disable menu anims:i:0' if self.menuCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'disable menu anims:i:1')
-        content.append('disable themes:i:0' if self.viewCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'disable themes:i:1')
-        content.append('bitmapcachepersistenable:i:1' if self.bitMapCheckBox.checkState(
-        ) == QtCore.Qt.Checked else 'bitmapcachepersistenable:i:0')
-
-        index = self.horizontalSlider.value()
-        if index == len(self.metricsMap):
-            index = index - 1
-        content.append('desktopwidth:i:' + str(self.metricsMap[index][0]))
-        content.append('desktopheight:i:' + str(self.metricsMap[index][1]))
-
-        self.rdcCtl.appendDefautContent(content)
-
-        '''self.rdcCtl.appendDefautContent('displayconnectionbar:i:1' if self.connBarCheckBox.checkState() == QtCore.Qt.Checked else 'displayconnectionbar:i:0')
-
-        self.rdcCtl.appendDefautContent('redirectprinters:i:1' if self.printCheckBox.checkState() == QtCore.Qt.Checked else 'redirectprinters:i:0')
-        
-        self.rdcCtl.appendDefautContent('redirectclipboard:i:1' if self.cliCheckBox.checkState() == QtCore.Qt.Checked else 'redirectclipboard:i:0')
-        
-        self.rdcCtl.appendDefautContent('autoreconnection enabled:i:1' if self.reconnCheckBox.checkState() == QtCore.Qt.Checked else 'autoreconnection enabled:i:0')
-
-        self.rdcCtl.appendDefautContent('authentication level:i:' +str(self.authComboBox.currentIndex()))
-        
-        self.rdcCtl.appendDefautContent('full address:s:' +str(self.cmpLineEdit_2.text()))
-        
-        self.rdcCtl.appendDefautContent('audiocapturemode:i:' +str(self.audioCaptureComBox.currentIndex()))
-        
-        self.rdcCtl.appendDefautContent('audiomode:i:' +str(self.audioPlayComBox.currentIndex()))
-        
-        self.rdcCtl.appendDefautContent('keyboardhook:i:' +str(self.keyComBox.currentIndex()))
-
-        self.rdcCtl.appendDefautContent('redirectsmartcards:i:1' if self.smartCardCheckBox.checkState()
-             == QtCore.Qt.Checked else 'redirectsmartcards:i:0')
-
-        self.rdcCtl.appendDefautContent('redirectcomports:i:1' if self.portCheckBox.checkState()
-             == QtCore.Qt.Checked else 'redirectcomports:i:0')
-
-        self.rdcCtl.appendDefautContent('redirectcomports:i:1' if self.portCheckBox.checkState()
-             == QtCore.Qt.Checked else 'redirectcomports:i:0')
-
-        if(self.drives.checkState(0) == QtCore.Qt.Checked):
-            self.rdcCtl.appendDefautContent('drivestoredirect:s:*')
-        if(self.devices.checkState(0) == QtCore.Qt.Checked):
-            self.rdcCtl.appendDefautContent('devicestoredirect:s:*')'''
-
-    def saveTmpFileFromRDP(self):
-        self.rdcCtl.setContentFromOpenFile('displayconnectionbar:i:', '1' if self.connBarCheckBox.checkState(
-        ) == QtCore.Qt.Checked else '0')
-
-        self.rdcCtl.setContentFromOpenFile('redirectprinters:i:', '1' if self.printCheckBox.checkState(
-        ) == QtCore.Qt.Checked else '0')
-
-        self.rdcCtl.setContentFromOpenFile('redirectclipboard:i:', '1' if self.cliCheckBox.checkState(
-        ) == QtCore.Qt.Checked else '0')
-
-        self.rdcCtl.setContentFromOpenFile('autoreconnection enabled:i:', '1' if self.reconnCheckBox.checkState(
-        ) == QtCore.Qt.Checked else '0')
-
-        self.rdcCtl.setContentFromOpenFile(
-            'authentication level:i:', str(self.authComboBox.currentIndex()))
-
-        self.rdcCtl.setContentFromOpenFile(
-            'full address:s:', str(self.cmpLineEdit_2.text()))
-
-        self.rdcCtl.setContentFromOpenFile(
-            'audiocapturemode:i:', str(self.audioCaptureComBox.currentIndex()))
-
-        self.rdcCtl.setContentFromOpenFile(
-            'audiomode:i:', str(self.audioPlayComBox.currentIndex()))
-
-        self.rdcCtl.setContentFromOpenFile(
-            'keyboardhook:i:', str(self.keyComBox.currentIndex()))
-
-        self.rdcCtl.setContentFromOpenFile('redirectsmartcards:i:', '1' if self.smartCardCheckBox.checkState(
-        ) == QtCore.Qt.Checked else '0')
-
-        self.rdcCtl.setContentFromOpenFile('redirectcomports:i:', '1' if self.portCheckBox.checkState(
-        ) == QtCore.Qt.Checked else '0')
-
-        self.rdcCtl.setContentFromOpenFile('drivestoredirect:s:', '*' if self.drives.checkState(0
-                                                                                                ) == QtCore.Qt.Checked else '')
-
-        self.rdcCtl.setContentFromOpenFile('devicestoredirect:s:', '*' if self.devices.checkState(0
-                                                                                                  ) == QtCore.Qt.Checked else '')
-
-        self.rdcCtl.setContentFromOpenFile(
-            'session bpp:i:', str(self.getColorComVal(self.colorComboBox.currentIndex())))
-
-        self.rdcCtl.setContentFromOpenFile(
-            'connection type:i:', str(self.connTypeComboBox.currentIndex() + 1))
-
-        self.rdcCtl.setContentFromOpenFile(
-            'disable wallpaper:i:', '0' if self.backCheckBox.checkState() == QtCore.Qt.Checked else '1')
-        self.rdcCtl.setContentFromOpenFile(
-            'allow font smoothing:i:', '1' if self.fontCheckBox.checkState() == QtCore.Qt.Checked else '0')
-        self.rdcCtl.setContentFromOpenFile(
-            'allow desktop composition:i:', '1' if self.backCssCheckBox.checkState() == QtCore.Qt.Checked else '0')
-        self.rdcCtl.setContentFromOpenFile(
-            'disable full window drag:i:', '0' if self.dragCheckBox.checkState() == QtCore.Qt.Checked else '1')
-        self.rdcCtl.setContentFromOpenFile(
-            'disable menu anims:i:', '0' if self.menuCheckBox.checkState() == QtCore.Qt.Checked else '1')
-        self.rdcCtl.setContentFromOpenFile(
-            'disable themes:i:', '0' if self.viewCheckBox.checkState() == QtCore.Qt.Checked else '1')
-        self.rdcCtl.setContentFromOpenFile(
-            'bitmapcachepersistenable:i:', '1' if self.bitMapCheckBox.checkState() == QtCore.Qt.Checked else '0')
-
-        index = self.horizontalSlider.value()
-        if index == len(self.metricsMap):
-            index = index - 1
-        self.rdcCtl.setContentFromOpenFile(
-            'desktopwidth:i:', str(self.metricsMap[index][0]))
-        self.rdcCtl.setContentFromOpenFile(
-            'desktopheight:i:', str(self.metricsMap[index][1]))
 
     def updateView(self):
         self.rdcCtl.initDefaultContent(self.rdpFilePath)

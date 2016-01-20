@@ -61,15 +61,15 @@ class RDPInstance:
         self.data["redirectcomports"] = 'i:0'
 
     def enable_drivestoredirect(self, letter, name):
-        if "drivestoredirect" not in self.data:
-            self.data["drivestoredirect"] = {}
-        self.data["drivestoredirect"][letter] = name
+        if "drivestoredirect:s" not in self.data:
+            self.data["drivestoredirect:s"] = {}
+        self.data["drivestoredirect:s"][letter] = name
 
     def disable_drivestoredirect(self, letter):
-        if "drivestoredirect" not in self.data:
+        if "drivestoredirect:s" not in self.data:
             return
-        if letter in self.data["drivestoredirect"]:
-            del self.data["drivestoredirect"][letter]
+        if letter in self.data["drivestoredirect:s"]:
+            del self.data["drivestoredirect:s"][letter]
 
     def set_session_bpp(self, bpp):
         self.data["session bpp"] = 'i:%s' % bpp
@@ -125,12 +125,17 @@ class RDPInstance:
     def set_desktopheight(self, len):
         self.data["desktopheight"] = 'i:%s' % len
 
-    def write(self, file):
+    def write(self, file=sys.stdout):
         try:
-            if isinstance(file, string):
+            if isinstance(file, str):
                 file = io.open(file, 'w')
         except:
-            pass
-        for key, value in self.data:
-            pass
+            sys.stderr.write("write to %s failed!\n" % file)
+        for key, value in sorted(self.data.items()):
+            if isinstance(value, list):
+                value = ";".join(value)
+            elif isinstance(value, dict):
+                value = ";".join(value.values())
+            file.write(key+":"+value+"\n")
+        file.close()
 
