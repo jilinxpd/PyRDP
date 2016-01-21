@@ -3,11 +3,9 @@ import re
 import sys
 import os
 from PyQt4 import QtCore, QtGui, uic
-from control import rdcCtl
 import rdpInstance
 from types import MethodType
-#import win32api
-#import ctypes
+
 
 qtCreatorFile = "ui/rdcD.ui"
 
@@ -19,8 +17,18 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
     def __init__(self):
         QtGui.QDialog.__init__(self)
         Ui_QDialog.__init__(self)
-        #QtGui.QApplication.setStyle(QtGui.QStyleFactory.create("plastique"))
         self.setupUi(self)
+        # self.connBtn.clicked.connect(self.connectFunc)
+        self.resize(391, 151)
+        self.optionWidget.hide()
+
+        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
+
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap('img/rdc.ico'),
+                       QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setWindowIcon(icon)
+
         self.driveNameMap = {'0': '未知',
                              '1':'无根目录',
                              '2':'可移动磁盘',
@@ -28,45 +36,19 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
                              '4':'网络驱动器',
                              '5':'CD 驱动器',
                              '6':'虚拟内存盘'}
-        #ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("rdcCtl")
-        # self.connBtn.clicked.connect(self.connectFunc)
-        self.optionWidget.hide()
-        self.optionToolBtn.clicked.connect(self.toOptionDWidget)
-        self.optionToolBtn_2.clicked.connect(self.toDefaultDWidget)
-        self.connBtn.clicked.connect(self.defaultConnectFunc)
-        self.connBtn_2.clicked.connect(self.optionConnectFunc)
-        #self.setGeometry(300, 300, 410, 180)
-        #self.setFixedSize(self.width(), self.height())
-        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
-        self.openBtn.clicked.connect(self.openFile)
-        self.saveBtn.clicked.connect(self.saveFile)
-        self.saveasBtn.clicked.connect(self.saveAsFile)
-
-        self.connTypeComboBox.currentIndexChanged.connect(self.connTypeChanged)
-        self.horizontalSlider.valueChanged.connect(self.deskSizeChanged)
-
         self.initEquipConent()
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap('img/rdc.ico'),
-                       QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.setWindowIcon(icon)
-        self.initDeskSize()
 
-        self.resize(391, 151)
-        #self.showFullScreen()
-        self.defaultRdpPath = os.getcwd() + "\\config\\.tmpRdp.rdp"
-        self.tmpFileFolder = os.getcwd() + '\\tmp'
-        self.rdpFilePath = ''
-        self.tmpFilePath = ''
-        self.fromDefault = True
+        self.initMetics()
+        self.horizontalSlider.setRange(0, len(self.metricsMap))
 
-        self.rdcCtl = rdcCtl.RdcCtl()
+        self.rdpFilePath = None
 
         self.initTmpFolder()
 
+        self.addListener()
+
         self.rdpInstance = rdpInstance.RDPInstance()
 
-        self.addListener()
         # print self.colorComboBox.itemText(0).extracomment
         #self.setGeometry(300, 300, 250, 150)
         # self.connect(self.accountEdit, SIGNAL("returnPressed(void)"),
@@ -74,6 +56,38 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
 
 
     def addListener(self):
+        def toOptionDWidget():
+            text=str(self.cmpLineEdit.text())
+            if len(text):
+                self.cmpLineEdit_2.setText(text)
+            self.resize(411, 346)
+            self.defaultWidget.hide()
+            self.optionWidget.show()
+        self.optionToolBtn.clicked.connect(toOptionDWidget)
+
+        def toDefaultDWidget():
+            text=str(self.cmpLineEdit_2.text())
+            if len(text):
+                self.cmpLineEdit.setText(text)
+            self.resize(391, 151)
+            self.optionWidget.hide()
+            self.defaultWidget.show()
+        self.optionToolBtn_2.clicked.connect(toDefaultDWidget)
+
+        def defaultConnectFunc():
+            self.connectRDP(self.cmpLineEdit.text())
+        self.connBtn.clicked.connect(defaultConnectFunc)
+
+        def optionConnectFunc():
+            self.connectRDP(self.cmpLineEdit_2.text())
+        self.connBtn_2.clicked.connect(optionConnectFunc)
+
+        self.openBtn.clicked.connect(self.openFile)
+
+        self.saveBtn.clicked.connect(self.saveFile)
+
+        self.saveasBtn.clicked.connect(self.saveAsFile)
+
         def connBarCheckBox_stateChanged(state):
             if state == QtCore.Qt.Checked:
                 self.rdpInstance.enable_displayconnectionbar()
@@ -194,15 +208,57 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
         self.bitMapCheckBox.stateChanged.connect(bitMapCheckBox_stateChanged)
 
         def horizontalSlider_stateChanged(index):
-            self.rdpInstance.set_desktopwidth(self.metricsMap[index][0])
-            self.rdpInstance.set_desktopheight(self.metricsMap[index][1])
+            width = self.metricsMap[index][0]
+            height = self.metricsMap[index][1]
+            if(index == len(self.metricsMap)):
+                self.deskSizeLabel.setText(u'   全屏')
+            else:
+                self.deskSizeLabel.setText(u'%s x %s 像素' % (width, height))
+            self.rdpInstance.set_desktopwidth(width)
+            self.rdpInstance.set_desktopheight(height)
         self.horizontalSlider.valueChanged.connect(horizontalSlider_stateChanged)
+
+        def connTypeComboBox_stateChanged(index):
+            #index = self.connTypeComboBox.currentIndex()
+            if index == 0:
+                self.backCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.fontCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.backCssCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.dragCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.menuCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.viewCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.bitMapCheckBox.setCheckState(QtCore.Qt.Checked)
+            elif index == 1:
+                self.backCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.fontCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.backCssCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.dragCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.menuCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.viewCheckBox.setCheckState(QtCore.Qt.Checked)
+                self.bitMapCheckBox.setCheckState(QtCore.Qt.Checked)
+            elif index == 2 or index == 3:
+                self.backCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.fontCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.backCssCheckBox.setCheckState(QtCore.Qt.Checked)
+                self.dragCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.menuCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                self.viewCheckBox.setCheckState(QtCore.Qt.Checked)
+                self.bitMapCheckBox.setCheckState(QtCore.Qt.Checked)
+            else:
+                self.backCheckBox.setCheckState(QtCore.Qt.Checked)
+                self.fontCheckBox.setCheckState(QtCore.Qt.Checked)
+                self.backCssCheckBox.setCheckState(QtCore.Qt.Checked)
+                self.dragCheckBox.setCheckState(QtCore.Qt.Checked)
+                self.menuCheckBox.setCheckState(QtCore.Qt.Checked)
+                self.viewCheckBox.setCheckState(QtCore.Qt.Checked)
+                self.bitMapCheckBox.setCheckState(QtCore.Qt.Checked)
+        self.connTypeComboBox.currentIndexChanged.connect(connTypeComboBox_stateChanged)
+
 
 
     def initTmpFolder(self):
-        if(os.path.isdir(self.tmpFileFolder)):
-            pass
-        else:
+        self.tmpFileFolder = os.getcwd() + '\\tmp'
+        if(not os.path.isdir(self.tmpFileFolder)):
             os.mkdir(self.tmpFileFolder)
 
     def initEquipConent(self):
@@ -263,27 +319,25 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
         self.equipTreeWidget.itemClicked.connect(self.equipClicked)
 
     def initDeskSize(self):
-        self.initMetics()
-        size = len(self.metricsMap)
-        self.horizontalSlider.setRange(0, size)
 
         self.horizontalSlider.setValue(size)
         self.deskSizeLabel.setText(u'   全屏')
 
-    def equipParentChangeWithChild(self, item):
-        length = item.childCount()
-        checkedSize = 0
-        for i in range(0, length):
-            if(item.child(i).checkState(0) == QtCore.Qt.Checked):
-                checkedSize += 1
-        if(checkedSize == length):
-            item.setCheckState(0, QtCore.Qt.Checked)
-        elif(checkedSize == 0):
-            item.setCheckState(0, QtCore.Qt.Unchecked)
-        else:
-            item.setCheckState(0, QtCore.Qt.PartiallyChecked)
+
 
     def equipClicked(self, item):
+        def equipParentChangeWithChild(item):
+            length = item.childCount()
+            checkedSize = 0
+            for i in range(0, length):
+                if(item.child(i).checkState(0) == QtCore.Qt.Checked):
+                    checkedSize += 1
+            if(checkedSize == length):
+                item.setCheckState(0, QtCore.Qt.Checked)
+            elif(checkedSize == 0):
+                item.setCheckState(0, QtCore.Qt.Unchecked)
+            else:
+                item.setCheckState(0, QtCore.Qt.PartiallyChecked)
         if hasattr(item, "isDrive"):
             name = unicode(item.text(0))
             results = re.match("^.*\((.+:)\)$", name)
@@ -293,70 +347,19 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
             else:
                 self.rdpInstance.disable_drivestoredirect(letter)
         if(isinstance(item.parent(), QtGui.QTreeWidgetItem)):
-            self.equipParentChangeWithChild(item.parent())
+            equipParentChangeWithChild(item.parent())
         self.setQTreeWidgetItems(item, item.checkState(0))
 
-    def connTypeChanged(self, index):
-        index = self.connTypeComboBox.currentIndex()
-        if index == 0:
-            self.backCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.fontCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.backCssCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.dragCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.menuCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.viewCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.bitMapCheckBox.setCheckState(QtCore.Qt.Checked)
-        elif index == 1:
-            self.backCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.fontCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.backCssCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.dragCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.menuCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.viewCheckBox.setCheckState(QtCore.Qt.Checked)
-            self.bitMapCheckBox.setCheckState(QtCore.Qt.Checked)
-        elif index == 2 or index == 3:
-            self.backCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.fontCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.backCssCheckBox.setCheckState(QtCore.Qt.Checked)
-            self.dragCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.menuCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            self.viewCheckBox.setCheckState(QtCore.Qt.Checked)
-            self.bitMapCheckBox.setCheckState(QtCore.Qt.Checked)
+
+    def connectRDP(self, ip):
+        if(self.isValidIP(ip)):
+            fpath = self.saveFile()
+            self.runCommand('mstsc %s' % fpath)
         else:
-            self.backCheckBox.setCheckState(QtCore.Qt.Checked)
-            self.fontCheckBox.setCheckState(QtCore.Qt.Checked)
-            self.backCssCheckBox.setCheckState(QtCore.Qt.Checked)
-            self.dragCheckBox.setCheckState(QtCore.Qt.Checked)
-            self.menuCheckBox.setCheckState(QtCore.Qt.Checked)
-            self.viewCheckBox.setCheckState(QtCore.Qt.Checked)
-            self.bitMapCheckBox.setCheckState(QtCore.Qt.Checked)
+            QtGui.QMessageBox.question(
+                self, 'Message', u'请输入合法的IP地址', QtGui.QMessageBox.Yes, QtGui.QMessageBox.Yes)
 
-    def deskSizeChanged(self, event):
-        if(event == len(self.metricsMap)):
-            self.deskSizeLabel.setText(u'   全屏')
-        else:
-            sizeLabel = str(self.metricsMap[event][
-                            0]) + ' * ' + str(self.metricsMap[event][1]) + u'像素'
-            self.deskSizeLabel.setText(sizeLabel)
 
-    def toOptionDWidget(self):
-        # self.tmpFilePath=os.getcwd()+'\\tmp\\rdp_'+self.cmpLineEdit_2.text()+'.rdp'
-        text=str(self.cmpLineEdit.text())
-        if len(text):
-            self.cmpLineEdit_2.setText(text)
-        self.resize(411, 346)
-        self.defaultWidget.hide()
-        self.optionWidget.show()
-        # self.adjustSize()
-
-    def toDefaultDWidget(self):
-        text=str(self.cmpLineEdit_2.text())
-        if len(text):
-            self.cmpLineEdit.setText(text)
-        self.resize(391, 151)
-        self.optionWidget.hide()
-        self.defaultWidget.show()
-        # self.adjustSize()
 
     def runCommand(self, cmdStr):
         stdouterr = os.popen4(str(cmdStr))[1].read()
@@ -364,20 +367,6 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
         # if(len(stdouterr)==0):
         #     self.close()
 
-    def defaultConnectFunc(self):
-        if(self.isValidIP(self.cmpLineEdit.text())):
-            self.runCommand('mstsc /v:' + self.cmpLineEdit.text())
-        else:
-            QtGui.QMessageBox.question(
-                self, 'Message', u'请输入合法的IP地址', QtGui.QMessageBox.Yes, QtGui.QMessageBox.Yes)
-
-    def optionConnectFunc(self):
-        if(self.isValidIP(self.cmpLineEdit_2.text())):
-            self.updataRdpFile()
-            self.runCommand('mstsc ' + self.tmpFilePath)
-        else:
-            QtGui.QMessageBox.question(
-                self, 'Message', u'请输入合法的IP地址', QtGui.QMessageBox.Yes, QtGui.QMessageBox.Yes)
 
     def openFile(self):
         fd = QtGui.QFileDialog(self).getOpenFileName()
@@ -386,35 +375,28 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
             self.rdpFilePath = fd
             self.updateView()
 
-    def saveFile(self):
-        if(len(self.tmpFilePath) == 0):
-            self.tmpFilePath = self.tmpFileFolder + '\\rdp_' + \
+    def saveFile(self, fpath):
+        if
+        if len(fpath) == 0:
+            self.rdpFilePath = self.tmpFileFolder + '\\rdp_' + \
                 self.cmpLineEdit_2.text() + '.rdp'
-        if(len(self.rdpFilePath) == 0):
-            self.rdpFilePath = self.tmpFilePath
+        else:
+            self.rdpFilePath = fpath
         self.rdpInstance.write(self.rdpFilePath)
 
     def saveAsFile(self):
-        saveasFilePath = str(QtGui.QFileDialog(self).getSaveFileName())
-        if(len(saveasFilePath) != 0):
-            self.rdpFilePath = saveasFilePath
-        self.saveFile()
+        saveAsFilePath = str(QtGui.QFileDialog(self).getSaveFileName())
+        if len(saveAsFilePath) != 0:
+            self.saveFile(saveAsFilePath)
 
-    def updataRdpFile(self):
-        if(len(self.tmpFilePath) == 0):
-            self.tmpFilePath = self.tmpFileFolder + '\\rdp_' + \
-                self.cmpLineEdit_2.text() + '.rdp'
-        if(self.fromDefault):
-            self.saveTmpFileFromDefault()
-        else:
-            self.saveTmpFileFromRDP()
-        self.rdcCtl.writeFile(self.tmpFilePath)
+    def initView(self):
+        pass
 
 
     def updateView(self):
         self.rdcCtl.initDefaultContent(self.rdpFilePath)
         add = self.rdcCtl.getValueByKeyStr('full address:s:')
-        if(add is not None):
+        if add is not None:
             self.cmpLineEdit_2.setText(add)
 
         disConnBar = self.rdcCtl.getValueByKeyStr('displayconnectionbar:i:')

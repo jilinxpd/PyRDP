@@ -128,15 +128,16 @@ class RDPInstance:
     def write(self, outfile=sys.stdout):
         try:
             if isinstance(outfile, str):
-                #outfile = io.open(outfile, mode='w', encoding="UTF-8")
-                outfile = io.open(outfile, mode='w')
+                outfile = io.open(outfile, mode='wb')
         except:
             sys.stderr.write("write to %s failed!\n" % outfile)
+            return
         for key, value in sorted(self.data.items()):
             if isinstance(value, list):
                 value = ";".join(value)
             elif isinstance(value, dict):
                 value = ";".join(value.values())
-            outfile.write(key+":"+value+"\n")
+            line = key+":"+value+"\r\n"
+            outfile.write(line.encode('UTF-8'))
         outfile.close()
 
