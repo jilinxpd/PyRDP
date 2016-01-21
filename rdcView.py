@@ -395,7 +395,7 @@ class MyDialog(QtGui.QDialog, Ui_QDialog):
         self.rdpInstance.write(self.rdpFilePath)
 
     def saveAsFile(self):
-        saveasFilePath = QtGui.QFileDialog(self).getSaveFileName()
+        saveasFilePath = str(QtGui.QFileDialog(self).getSaveFileName())
         if(len(saveasFilePath) != 0):
             self.rdpFilePath = saveasFilePath
         self.saveFile()

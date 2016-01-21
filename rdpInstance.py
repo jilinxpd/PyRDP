@@ -125,17 +125,18 @@ class RDPInstance:
     def set_desktopheight(self, len):
         self.data["desktopheight"] = 'i:%s' % len
 
-    def write(self, file=sys.stdout):
+    def write(self, outfile=sys.stdout):
         try:
-            if isinstance(file, str):
-                file = io.open(file, 'w')
+            if isinstance(outfile, str):
+                #outfile = io.open(outfile, mode='w', encoding="UTF-8")
+                outfile = io.open(outfile, mode='w')
         except:
-            sys.stderr.write("write to %s failed!\n" % file)
+            sys.stderr.write("write to %s failed!\n" % outfile)
         for key, value in sorted(self.data.items()):
             if isinstance(value, list):
                 value = ";".join(value)
             elif isinstance(value, dict):
                 value = ";".join(value.values())
-            file.write(key+":"+value+"\n")
-        file.close()
+            outfile.write(key+":"+value+"\n")
+        outfile.close()
 
