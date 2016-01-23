@@ -506,12 +506,6 @@
               <property name="inputMethodHints">
                <set>Qt::ImhNone</set>
               </property>
-              <property name="minimum">
-               <number>0</number>
-              </property>
-              <property name="maximum">
-               <number>6</number>
-              </property>
               <property name="singleStep">
                <number>1</number>
               </property>
@@ -558,12 +552,15 @@
             <rect>
              <x>120</x>
              <y>70</y>
-             <width>81</width>
+             <width>90</width>
              <height>16</height>
             </rect>
            </property>
            <property name="text">
             <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </widget>
@@ -595,9 +592,6 @@
              <height>22</height>
             </rect>
            </property>
-           <property name="currentIndex">
-            <number>3</number>
-           </property>
            <item>
             <property name="text">
              <string extracomment="15">增强色(15 位)</string>
@@ -625,9 +619,6 @@
          <widget class="QCheckBox" name="connBarCheckBox">
           <property name="text">
            <string>全屏显示时显示连接栏。</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -685,6 +676,9 @@
           <height>22</height>
          </rect>
         </property>
+        <property name="currentIndex">
+         <number>-1</number>
+        </property>
         <item>
          <property name="text">
           <string>在此计算机上播放</string>
@@ -709,6 +703,9 @@
           <width>131</width>
           <height>22</height>
          </rect>
+        </property>
+        <property name="currentIndex">
+         <number>-1</number>
         </property>
         <item>
          <property name="text">
@@ -755,9 +752,6 @@
           <width>141</width>
           <height>22</height>
          </rect>
-        </property>
-        <property name="currentIndex">
-         <number>2</number>
         </property>
         <item>
          <property name="text">
@@ -826,9 +820,6 @@
         <property name="text">
          <string>打印机</string>
         </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
        </widget>
        <widget class="QCheckBox" name="cliCheckBox">
         <property name="geometry">
@@ -841,9 +832,6 @@
         </property>
         <property name="text">
          <string>剪切板</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
         </property>
        </widget>
       </widget>
@@ -888,9 +876,6 @@
         </property>
         <property name="text">
          <string>智能卡</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
         </property>
        </widget>
        <widget class="QCheckBox" name="portCheckBox">
@@ -973,9 +958,11 @@
           <height>22</height>
          </rect>
         </property>
-        <property name="currentIndex">
-         <number>0</number>
-        </property>
+        <item>
+         <property name="text">
+          <string>自动检测连接质量</string>
+         </property>
+        </item>
         <item>
          <property name="text">
           <string>调制解调器(56Kbps)</string>
@@ -1097,9 +1084,6 @@
         <property name="text">
          <string>持久位图缓存</string>
         </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
        </widget>
        <widget class="QCheckBox" name="viewCheckBox">
         <property name="geometry">
@@ -1126,9 +1110,6 @@
        </property>
        <property name="text">
         <string>如果连接中断，则重新连接。</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
        </property>
       </widget>
      </widget>
@@ -1177,7 +1158,7 @@
          </rect>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>-1</number>
         </property>
         <item>
          <property name="text">
