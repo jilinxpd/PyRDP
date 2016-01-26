@@ -40,6 +40,7 @@ class RDPDialog(QtGui.QDialog, Ui_QDialog):
                              '6':'虚拟内存盘'}
         if blacklist is None:
             #self.blacklist = {"drives": ["C:", "D:"], "devices": ["*"]}
+            #self.blacklist = {"drives": [u"本地磁盘", u"CD 驱动器"], "devices": []}
             self.blacklist = {"drives": [], "devices": []}
         else:
             self.blacklist = blacklist
@@ -311,7 +312,7 @@ class RDPDialog(QtGui.QDialog, Ui_QDialog):
                     volName = self.driveNameMap[properties[1]].decode('UTF-8')
                 else:
                     volName = properties[2].decode('GBK')
-                if properties[0] in self.blacklist["drives"]:
+                if volName in self.blacklist["drives"]:
                     continue
                 itemStr = volName + ' (' + properties[0] + ')'
                 itemDrive = QtGui.QTreeWidgetItem(self.drives)
